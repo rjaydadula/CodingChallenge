@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,48 +11,56 @@ namespace CodingChallenge
     {
         public int MaxCountX { get; set; }
         public int MaxCountY { get; set; }
-        public int[,] challengeMap;
+        public string[,] challengeMap;
 
         public ChallengeMap(int MaxCountX, int MaxCountY)
         {
             this.MaxCountX = MaxCountX;
             this.MaxCountY = MaxCountY;
-            challengeMap = new int[this.MaxCountX, this.MaxCountY];
+            challengeMap = new string[this.MaxCountX, this.MaxCountY];
         }
 
         public void Create()
         {
-            
-            int valuePerBox = 1500;
-
-            //Populating the ChallengeMap with data
-            for (int mapIndex_X = 0; mapIndex_X < MaxCountX; mapIndex_X++)
+            string _filePath = Path.GetDirectoryName(System.AppDomain.CurrentDomain.BaseDirectory);
+            _filePath = Directory.GetParent(Directory.GetParent(_filePath).FullName).FullName;
+            _filePath += @"\mapdummy.txt";
+            if (File.Exists(_filePath))
             {
-                for (int mapIndex_Y = 0; mapIndex_Y < MaxCountY; mapIndex_Y++)
+                using (StreamReader streamReader = new StreamReader(_filePath))
                 {
-                    // *** ValuePerBox must be between 0 to 1500
-                    valuePerBox--;
+                    string reader = streamReader.ReadToEnd();
 
-                    if (valuePerBox == 0)
-                        valuePerBox = 1499;
-                    //****
+                    using (StringReader strReader = new StringReader(reader))
+                    {
+                        string line = string.Empty;
+                        int lineCounter = 0;
+                        while ((line = strReader.ReadLine()) != null)
+                        {
+                            if (lineCounter > 0)
+                            {
+                                //Populating the ChallengeMap with data
 
-                    challengeMap[mapIndex_X, mapIndex_Y] = valuePerBox;
+                                string[] fileData = line.Split(' ');
+
+                                int mapIndex_Y = 0;
+                                int mapIndex_X = lineCounter - 1;
+                                foreach (string data in fileData)
+                                {
+                                    challengeMap[mapIndex_X, mapIndex_Y] = data.Trim();
+                                    mapIndex_Y++;
+                                }
+
+                            }
+
+                            lineCounter++;
+                        }
+                    }
                 }
             }
-        }
-
-        public void Display()
-        {
-            //DISPLAYING MAP
-            for (int mapIndex_X = 0; mapIndex_X < MaxCountX; mapIndex_X++)
+            else
             {
-                for (int mapIndex_Y = 0; mapIndex_Y < MaxCountY; mapIndex_Y++)
-                {
-                    Console.Write(" " + challengeMap[mapIndex_X, mapIndex_Y].ToString() + " ");
-
-                }
-                Console.Write("\n");
+                Console.WriteLine("map.txt not Found!");
             }
         }
     }
