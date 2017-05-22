@@ -34,7 +34,7 @@ namespace CodingChallenge
             this.stageCount = 0;
         }
 
-        public TreeNode(int data,int stageCount)
+        public TreeNode(int data, int stageCount)
         {
             this.east = null;
             this.west = null;
@@ -72,7 +72,7 @@ namespace CodingChallenge
                 currentNode.east = newNode;
                 //mainNode.east = currentNode;
             }
-            
+
         }
 
         public void AddWestNode(TreeNode currentNode, TreeNode newNode)
@@ -100,7 +100,7 @@ namespace CodingChallenge
                 newNode.east = currentNode;
                 newNode.stageCount = newNode.east.stageCount + 1;
                 currentNode.west = newNode;
-               // mainNode.west = currentNode;
+                // mainNode.west = currentNode;
             }
         }
 
@@ -122,12 +122,12 @@ namespace CodingChallenge
                 newNode.north = currentNode;
                 newNode.stageCount = currentNode.stageCount + 1;
                 currentNode.south = newNode;
-                if(mainNode.south == null)
-                  mainNode.south = newNode;
+                if (mainNode.south == null)
+                    mainNode.south = newNode;
             }
         }
-    }
 
+    }
 
     public class PathFinder
     {
@@ -136,15 +136,15 @@ namespace CodingChallenge
         public int DropOfCalculatedPath { get; set; }
         public string CalculatedPath { get; set; }
 
-        private void scanLeft(Dictionary<int, Node> lineData,TreeNode mainTree,TreeNode currentEastNode, TreeNode currentSouthNode)
+        private void scanLeft(Dictionary<int, Node> lineData, TreeNode mainTree, TreeNode currentEastNode, TreeNode currentSouthNode, int scanIndex)
         {
-            int direction = lineData.Count - 2;
-            for(int leftScanData=0;leftScanData <= lineData.Count - 2; leftScanData++)
+            int direction = lineData.Count - scanIndex;
+            for (int leftScanData = 0; leftScanData <= lineData.Count - scanIndex; leftScanData++)
             {
                 TreeNode eastNode = new TreeNode();
 
                 eastNode.data = lineData[direction].center;
-                
+
                 mainTree.AddEastNode(currentEastNode, eastNode);
                 currentEastNode = eastNode;
                 currentSouthNode = eastNode;
@@ -152,17 +152,23 @@ namespace CodingChallenge
                 TreeNode southNode = new TreeNode();
                 southNode.data = lineData[direction].south;
 
-                mainTree.AddSouthNode(currentSouthNode, southNode);
+                if (southNode.data != null)
+                    mainTree.AddSouthNode(currentSouthNode, southNode);
 
                 direction--;
             }
-            
+
         }
 
-        private void scanRight(List<Node> node,int index, TreeNode mainTree, TreeNode currentWestNode,TreeNode currentSouthNode)
+        private void scanRight(List<Node> node, int index, TreeNode mainTree, TreeNode currentWestNode, TreeNode currentSouthNode)
         {
+            //if (index < node.Count-1)
+            //{
             for (int rightScanData = index; rightScanData < node.Count; rightScanData++)
             {
+                //Check If Last West Index
+                //if (rightScanData < node.Count - 1)
+                //{
                 TreeNode westNode = new TreeNode();
 
                 westNode.data = node[rightScanData].center;
@@ -174,33 +180,14 @@ namespace CodingChallenge
                 TreeNode southNode = new TreeNode();
                 southNode.data = node[rightScanData].south;
 
-                mainTree.AddSouthNode(currentSouthNode, southNode);
+                if (southNode.data != null)
+                    mainTree.AddSouthNode(currentSouthNode, southNode);
+                //}
             }
-
+            //}
         }
 
-        private void checkBottom(Dictionary<int, Node> lineData, string coordinate, string data)
-        {
-            string dataList = string.Empty;
-
-            string[] indexCoordinate = coordinate.Split(',');
-            int mapIndex_X = int.Parse(indexCoordinate[0]);
-            int mapIndex_Y = int.Parse(indexCoordinate[1]);
-
-            int direction = lineData.Count - 2;
-            for (int leftScanData = 0; leftScanData <= lineData.Count - 2; leftScanData++)
-            {
-                string dataScanned = lineData[direction].center;
-
-                if (int.Parse(lineData[direction].center) < int.Parse(data) && int.Parse(lineData[direction].center) > int.Parse(lineData[direction].south))
-                    dataList += string.Concat(lineData[direction].center + "-");
-
-                direction--;
-            }
-
-        }
-
-        public void CreatePath(ChallengeMap map)
+        public TreeNode CreatePath(ChallengeMap map)
         {
             nodeListPerIndex = new Dictionary<int, List<Node>>();
 
@@ -215,19 +202,19 @@ namespace CodingChallenge
                     node.coordinate = mapIndex_X + "," + mapIndex_Y;
 
                     if (mapIndex_Y == 0)
-                        node.east = "2000";
+                        node.east = null;
                     else
                         node.east = map.challengeMap[mapIndex_X, mapIndex_Y - 1];
 
 
                     if (mapIndex_Y == map.MaxCountY - 1)
-                        node.west = "2000";
+                        node.west = null;
                     else
                         node.west = map.challengeMap[mapIndex_X, mapIndex_Y + 1];
 
 
                     if (mapIndex_X == map.MaxCountX - 1)
-                        node.south = "2000";
+                        node.south = null;
                     else
                         node.south = map.challengeMap[mapIndex_X + 1, mapIndex_Y];
 
@@ -256,97 +243,137 @@ namespace CodingChallenge
 
             bool isrootFound = false;
             int rootIndex_Y = 0;
+            int scanIndex = 0;
+
             foreach (var dictionaryData in nodeListPerIndex)
             {
                 Upperindex++;
                 int Lowerindex = 0;
+                bool isScanLeft = false;
                 Dictionary<int, Node> dataLeftScan = new Dictionary<int, Node>();
+
                 foreach (var data in dictionaryData.Value)
                 {
 
-                    if(isDropOfCalculatedPathFound)
+                    if (isDropOfCalculatedPathFound)
                     {
                         if (Upperindex != nodeListPerIndex.Count)
                         {
-                            scanLeft(dataLeftScan, MainTree, currentEastNodeTree, currentSouthNodeTree);
+                            if (!isScanLeft)
+                            {
+                                scanLeft(dataLeftScan, MainTree, currentEastNodeTree, currentSouthNodeTree, scanIndex);
+                                isScanLeft = true;
+                            }
 
-                            if(Lowerindex == dictionaryData.Value.Count - 1)
-                            scanRight(dictionaryData.Value, rootIndex_Y+1, MainTree, currentWestNodeTree, currentSouthNodeTree);
+                            if (Lowerindex == dictionaryData.Value.Count - 1)
+                                scanRight(dictionaryData.Value, rootIndex_Y + 1, MainTree, currentWestNodeTree, currentSouthNodeTree);
 
                         }
-                   
+
                     }
                     else
                     {
-                        dataLeftScan.Add(Lowerindex, data);
-
+                        //Find Root Value
                         if (data.center == DropOfCalculatedPath.ToString())
                         {
                             isrootFound = true;
                             rootIndex_Y = Lowerindex;
+                            scanIndex = 1;
                             isDropOfCalculatedPathFound = true;
 
                             TreeNode rootNode = new TreeNode(DropOfCalculatedPath, 1);
-                           
-                            MainTree.AddEastNode(rootNode,rootNode);
+
+                            MainTree.AddEastNode(rootNode, rootNode);
                             currentSouthRootNodeTree = rootNode;
 
                             TreeNode southNode = new TreeNode();
                             southNode.data = data.south;
                             rootNextSouth = data.south;
 
-                            MainTree.AddSouthNode(currentSouthRootNodeTree, southNode);
-                            currentSouthRootNodeTree = southNode;
+                            if (southNode.data != null)
+                            {
+                                MainTree.AddSouthNode(currentSouthRootNodeTree, southNode);
+                                currentSouthRootNodeTree = southNode;
+                            }
 
+                            //Check if Root Data is in the Last Index_Y
                             if (Lowerindex == dictionaryData.Value.Count - 1)
                             {
-                                scanLeft(dataLeftScan, MainTree, currentEastNodeTree, currentSouthNodeTree);
-                                scanRight(dictionaryData.Value, rootIndex_Y + 1, MainTree, currentWestNodeTree, currentSouthNodeTree);
+                                scanLeft(dataLeftScan, MainTree, currentEastNodeTree, currentSouthRootNodeTree, scanIndex);
                             }
                         }
                         else
                         {
+
+                            dataLeftScan.Add(Lowerindex, data);
+
                             if (data.center == currentSouthRootNodeTree.data && Lowerindex == rootIndex_Y)
                             {
+                                dataLeftScan.Remove(Lowerindex);
+
+                                scanIndex = 2;
                                 isDropOfCalculatedPathFound = true;
 
                                 TreeNode eastNode = new TreeNode();
                                 eastNode.data = data.east;
-                                MainTree.AddEastNode(currentSouthRootNodeTree, eastNode);
+
+                                if (eastNode.data != null)
+                                {
+                                    MainTree.AddEastNode(currentSouthRootNodeTree, eastNode);
+                                    currentEastNodeTree = eastNode;
+                                }
 
                                 TreeNode westNode = new TreeNode();
                                 westNode.data = data.west;
-                                MainTree.AddWestNode(currentSouthRootNodeTree, westNode);
+
+                                if (westNode.data != null)
+                                {
+                                    MainTree.AddWestNode(currentSouthRootNodeTree, westNode);
+                                    currentWestNodeTree = westNode;
+                                }
 
                                 TreeNode southNode = new TreeNode();
                                 southNode.data = data.south;
                                 rootNextSouth = data.south;
 
-                                MainTree.AddSouthNode(currentSouthRootNodeTree, southNode);
-                                currentSouthRootNodeTree = southNode;
+                                if (southNode.data != null)
+                                {
+                                    MainTree.AddSouthNode(currentSouthRootNodeTree, southNode);
+                                    currentSouthRootNodeTree = southNode;
+                                }
 
+                                //Check if Root Data is in the Last Index_Y
                                 if (Lowerindex == dictionaryData.Value.Count - 1)
                                 {
-                                    scanLeft(dataLeftScan, MainTree, currentEastNodeTree, currentSouthNodeTree);
-                                    scanRight(dictionaryData.Value, rootIndex_Y + 1, MainTree, currentWestNodeTree, currentSouthNodeTree);
+                                    scanLeft(dataLeftScan, MainTree, currentEastNodeTree, currentSouthRootNodeTree, scanIndex);
                                 }
                             }
                         }
-
-                       
-
-                        
                     }
 
                     Lowerindex++;
 
-                    
-                }
 
+                }
+                //Reset to get the value below the root value
                 if (isDropOfCalculatedPathFound)
                     isDropOfCalculatedPathFound = false;
+
+
+                if (nodeListPerIndex.Count == Upperindex)
+                {
+                    scanLeft(dataLeftScan, MainTree, currentEastNodeTree, currentSouthNodeTree, scanIndex);
+                    scanRight(dictionaryData.Value, rootIndex_Y + 1, MainTree, currentWestNodeTree, currentSouthNodeTree);
+                }
             }
 
+
+            return MainTree;
+        }
+
+        public void ShowLongestPath(TreeNode MainTree, int maxLength_X)
+        {
+            TreeNode current_Treenode = new TreeNode();
 
 
         }
