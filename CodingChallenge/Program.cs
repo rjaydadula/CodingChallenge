@@ -13,7 +13,7 @@ namespace CodingChallenge
         static void Main(string[] args)
         {
 
-            ChallengeMap map = new ChallengeMap(3,4);
+            ChallengeMap map = new ChallengeMap(4,4);
             PathFinder pathFinder = new PathFinder();
             pathFinder.DropOfCalculatedPath = 5;
             map.Create();
