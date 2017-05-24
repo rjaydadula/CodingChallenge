@@ -13,17 +13,23 @@ namespace CodingChallenge
         static void Main(string[] args)
         {
 
-            ChallengeMap map = new ChallengeMap(4,4);
-            PathFinder pathFinder = new PathFinder();
-            pathFinder.DropOfCalculatedPath = 5;
+            ChallengeMap map = new ChallengeMap(1000,1000);
             map.Create();
 
-            pathFinder.CreatePath(map);
+            PathFinder pathFinder = new PathFinder();
+            pathFinder.SearchPath(map);
 
-            Console.Write("\n\n");
-            Console.WriteLine("Length Of Calculated Path: "+ pathFinder.LengthOfCalculatedPath);
-            Console.WriteLine("Drop Of Calculated Path: " + pathFinder.DropOfCalculatedPath);
-            Console.WriteLine("Calculated Path: " + pathFinder.CalculatedPath);
+            if (pathFinder.CalculatedPath != null && pathFinder.CalculatedPath.Trim() != string.Empty)
+            {
+                Console.WriteLine("Length Of Calculated Path: " + pathFinder.LengthOfCalculatedPath);
+                Console.WriteLine("Drop Of Calculated Path: " + pathFinder.DropOfCalculatedPath);
+                Console.WriteLine("Calculated Path: " + pathFinder.CalculatedPath);
+                
+            }
+            else
+            {
+                Console.WriteLine("No Possible Path Down!");
+            }
 
             Console.Read();
 

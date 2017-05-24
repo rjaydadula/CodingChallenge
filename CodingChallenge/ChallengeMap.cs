@@ -24,7 +24,7 @@ namespace CodingChallenge
         {
             string _filePath = Path.GetDirectoryName(System.AppDomain.CurrentDomain.BaseDirectory);
             _filePath = Directory.GetParent(Directory.GetParent(_filePath).FullName).FullName;
-            _filePath += @"\mapdummy.txt";
+            _filePath += @"\map.txt";
             if (File.Exists(_filePath))
             {
                 using (StreamReader streamReader = new StreamReader(_filePath))

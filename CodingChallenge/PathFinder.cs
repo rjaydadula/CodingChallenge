@@ -16,41 +16,76 @@ namespace CodingChallenge
 
     public class PathFinder
     {
-        //public Dictionary<int, List<Node>> nodeListPerIndex { get; set; }
         public int LengthOfCalculatedPath { get; set; }
         public int DropOfCalculatedPath { get; set; }
         public string CalculatedPath { get; set; }
 
-        public void CreatePath(ChallengeMap map)
+        public void SearchPath(ChallengeMap map)
         {
             int[,] mapPath = new int[map.MaxCountX,map.MaxCountY];
             PathNode[,] pathMap = new PathNode[map.MaxCountX, map.MaxCountY];
 
             for (int mapIndex_X = 0; mapIndex_X < map.MaxCountX; mapIndex_X++)
             {
-                //box_counter = mapIndex_X;
                 for (int mapIndex_Y = 0; mapIndex_Y < map.MaxCountY; mapIndex_Y++)
                 {
                     PathNode node = new PathNode();
-                    //node.box_Count = box_counter;
                     node.data = int.Parse(map.challengeMap[mapIndex_X, mapIndex_Y]);
                     node.coordinate_X = mapIndex_X;
                     node.coordinate_Y = mapIndex_Y;
 
                     pathMap[mapIndex_X, mapIndex_Y] = node;
-
-                    //box_counter++;
                 }
             }
 
             List<PathNode> targetNodes = new List<PathNode>();
 
-            targetNodes = findRooTNodeCoordinate(DropOfCalculatedPath,map,pathMap);
+            targetNodes = findAllStartingNode(map,pathMap);
 
             List<List<PathNode>> TotalPath_List = findPath(pathMap, map, targetNodes).OrderByDescending(x=>x.Count).ToList();
 
-            TotalPath_List = filterTopPaths(TotalPath_List);
+            if (TotalPath_List.Count > 0)
+            {
+                TotalPath_List = filterTopPaths(TotalPath_List);
+                findSteepestNodePath(TotalPath_List);
+            }
 
+        }
+
+        private void findSteepestNodePath(List<List<PathNode>> TotalPath_List)
+        {
+            List<PathNode> steepestNodes = new List<PathNode>();
+            PathNode node = new PathNode();
+            node.data = 1;
+            steepestNodes.Add(node);
+
+            PathNode node1 = new PathNode();
+            node1.data = 1;
+            steepestNodes.Add(node1);
+
+
+            foreach (List<PathNode> nodelist in TotalPath_List)
+            {
+                int steepestCount = nodelist[0].data - nodelist[nodelist.Count - 1].data;
+                int mainCollectionCount = steepestNodes[0].data - steepestNodes[steepestNodes.Count - 1].data;
+
+                if (steepestCount > mainCollectionCount)
+                    steepestNodes = nodelist;
+            }
+
+            int index = 0;
+            foreach(PathNode pathnode in steepestNodes)
+            {
+                if (index < steepestNodes.Count - 1)
+                    CalculatedPath += string.Concat(pathnode.data + "-");
+                else
+                    CalculatedPath += pathnode.data;
+
+                index++;
+            }
+
+            LengthOfCalculatedPath = steepestNodes.Count;
+            DropOfCalculatedPath = steepestNodes[0].data - steepestNodes[steepestNodes.Count - 1].data;
         }
 
         private List<List<PathNode>> filterTopPaths(List<List<PathNode>> TotalPath_List)
@@ -69,20 +104,48 @@ namespace CodingChallenge
             return TotalPath_List;
         }
 
-        private List<PathNode> findRooTNodeCoordinate(int DropOfCalculatedPath, ChallengeMap map, PathNode[,] pathMap)
+        private List<PathNode> findAllStartingNode(ChallengeMap map, PathNode[,] pathMap)
         {
             //x,y,data
             List<PathNode> nodeList = new List<PathNode>();
 
+            List<PathNode> nodeListSameValue = new List<PathNode>();
+
             for (int mapIndex_X = 0; mapIndex_X < map.MaxCountX; mapIndex_X++)
             {
+                PathNode highestNodeValue = new PathNode();
+
                 for (int mapIndex_Y = 0; mapIndex_Y < map.MaxCountY; mapIndex_Y++)
                 {
-                    if(pathMap[mapIndex_X,mapIndex_Y].data == DropOfCalculatedPath)
+                    if (mapIndex_X < map.MaxCountX - 1)
                     {
-                        nodeList.Add(pathMap[mapIndex_X, mapIndex_Y]);
+                        if (pathMap[mapIndex_X, mapIndex_Y].data > highestNodeValue.data)
+                        {
+
+                            highestNodeValue = pathMap[mapIndex_X, mapIndex_Y];
+
+                            nodeListSameValue = new List<PathNode>();
+                            nodeListSameValue.Add(highestNodeValue);
+
+                        }
+                        else
+                        {
+                            if (pathMap[mapIndex_X, mapIndex_Y].data == highestNodeValue.data && highestNodeValue.data > 0)
+                            {
+                                nodeListSameValue.Add(pathMap[mapIndex_X, mapIndex_Y]);
+                            }
+                        }
+                    }
+                }
+
+                if (highestNodeValue.data > 0 && nodeListSameValue.Count > 0)
+                {
+                    foreach (PathNode node in nodeListSameValue)
+                    {
+                        nodeList.Add(node);
                     }
 
+                    nodeListSameValue = new List<PathNode>();
                 }
             }
 
@@ -91,251 +154,61 @@ namespace CodingChallenge
 
         private List<List<PathNode>> findPath(PathNode[,] pathMap, ChallengeMap map, List<PathNode> targetNodes)
         {
-            List<List<PathNode>> pathNodeInTotalSearched = new List<List<PathNode>>();
+            DirectionScanner scanner = new DirectionScanner();
 
-            PathNode currentNode = new PathNode();
-            List<PathNode> avoidNodeList = new List<PathNode>();
+            List<List<PathNode>> pathNodeInTotalSearched = new List<List<PathNode>>();
 
             foreach (PathNode node in targetNodes)
             {
-                List<PathNode> pathNodeSearched = new List<PathNode>();
-                currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
-                pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
+                scanner.pathNodeSearched = new List<PathNode>();
+                scanner.avoidNodeList = new List<PathNode>();
 
-                int coordinate_X = 0;
-                int coordinate_Y = 0;
-                int isStillFinding = 0;
-                int sameBoxAlwaysCount = 0;
-                int sameBoxAlwaysCount_MAX_Count = 3;
-                PathNode node_checker = new PathNode();
-
-                int MaxRootReturn = 3;
+                scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
+                scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
+                bool hasScanned = false;
+                int maxcounter = 0;
 
                 while (true)
                 {
+                    hasScanned = scanner.ScanLeft(pathMap);
 
-                    #region -- *** Search in the Left Side ** --
-
-                    coordinate_X = currentNode.coordinate_X;
-                    coordinate_Y = currentNode.coordinate_Y-1;
-
-                    
-                    if (coordinate_Y >= 0)
-                    {
-                        if (!avoidNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))
-                        {
-                            if (currentNode.data > pathMap[coordinate_X, coordinate_Y].data)
-                            {
-                                currentNode = pathMap[coordinate_X, coordinate_Y];
-                                pathNodeSearched.Add(pathMap[coordinate_X, coordinate_Y]);
-                                isStillFinding++;
-                            }
-                        }
-                    }
-
-                    #endregion
-
-                    #region -- *** Search in the Right Side *** --
-                    coordinate_X = currentNode.coordinate_X;
-                    coordinate_Y = currentNode.coordinate_Y+1;
-
-                    
-                    if (coordinate_Y <= map.MaxCountY - 1)
-                    {
-                        if (!avoidNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))
-                        {
-                            if (currentNode.data > pathMap[coordinate_X, coordinate_Y].data)
-                            {
-                                currentNode = pathMap[coordinate_X, coordinate_Y];
-                                pathNodeSearched.Add(pathMap[coordinate_X, coordinate_Y]);
-                                isStillFinding++;
-
-                                
-                            }
-                        }
-                    }
-
-                    #endregion
-
-
-                    coordinate_X = currentNode.coordinate_X + 1;
-                    coordinate_Y = currentNode.coordinate_Y;
-
-                    //IF No valid Value in Left and Right and Downward
-                    if (isStillFinding == 0 && coordinate_X <= map.MaxCountX-1 && currentNode.data <= pathMap[coordinate_X, coordinate_Y].data)
-                    {
-                        if(pathNodeSearched.Count == 0)
-                            avoidNodeList.Add(pathNodeSearched[pathNodeSearched.Count]);
-                        else
-                            avoidNodeList.Add(pathNodeSearched[pathNodeSearched.Count - 1]);
-
-                        pathNodeSearched.RemoveAt(pathNodeSearched.Count - 1);
-
-                        if (pathNodeSearched.Count == 0)
-                            currentNode = pathNodeSearched[pathNodeSearched.Count];
-                        else
-                            currentNode = pathNodeSearched[pathNodeSearched.Count - 1];
-
+                    //Left Scan
+                    if (hasScanned)
                         continue;
-                    }
                     else
+                        hasScanned = scanner.ScanRight(pathMap, map.MaxCountY);
+
+                    //Right Scan
+                    if (hasScanned)
+                        continue;
+
+                    if (!hasScanned)
                     {
-                        if(avoidNodeList.Count() > 0 && isStillFinding == 0)
+                        hasScanned = scanner.ScanDownward(pathMap, map.MaxCountX);
+
+                        if (hasScanned)
                         {
-                            //Check If Downward Data is Valid
-                            #region
-                            if (currentNode.data > pathMap[coordinate_X, coordinate_Y].data)
+                            //CHECK IF END OF MAP IS REACHED
+                            if (scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1].coordinate_X == map.MaxCountX - 1)
                             {
-                                if (node_checker != pathMap[coordinate_X, coordinate_Y])
-                                    node_checker = pathMap[coordinate_X, coordinate_Y];
-                                else
-                                {
-                                    if (pathNodeSearched.Count == 0)
-                                        avoidNodeList.Add(pathNodeSearched[pathNodeSearched.Count]);
-                                    else
-                                        avoidNodeList.Add(pathNodeSearched[pathNodeSearched.Count - 1]);
-
-                                    pathNodeSearched.RemoveAt(pathNodeSearched.Count - 1);
-
-                                    if (pathNodeSearched.Count == 0)
-                                        currentNode = pathNodeSearched[pathNodeSearched.Count];
-                                    else
-                                        currentNode = pathNodeSearched[pathNodeSearched.Count - 1];
-
-                                    continue;
-                                }
-
-
-
-                                if (coordinate_X <= map.MaxCountX - 1)
-                                {
-                                    if (currentNode.data > pathMap[coordinate_X, coordinate_Y].data)
-                                    {
-                                        //MaxRootReturn = 3;
-                                        currentNode = pathMap[coordinate_X, coordinate_Y];
-                                        pathNodeSearched.Add(pathMap[coordinate_X, coordinate_Y]);
-
-                                        //Remove AvoidList In Current Index Scanned
-                                        avoidNodeList = ClearAllAvoidNodeInCurrentXIndex(coordinate_X, avoidNodeList);
-
-                                        if (coordinate_X == map.MaxCountX - 1)
-                                        {
-                                            pathNodeInTotalSearched.Add(pathNodeSearched);
-                                            pathNodeSearched = new List<PathNode>();
-
-                                            avoidNodeList = AddAvoidList(pathNodeInTotalSearched, avoidNodeList);
-
-                                            if (MaxRootReturn != 0)
-                                            {
-                                                currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
-                                                pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
-                                                continue;
-                                            }
-
-                                            break;
-                                        }
-                                        isStillFinding++;
-                                    }
-
-                                    continue;
-                                }
-                                
-                            }
-                            #endregion
-
-                            if (pathNodeSearched.Count - 1 <= 0)
-                            {
-                                MaxRootReturn = MaxRootReturn - 1;
-
-                                //Check IF Maximum Return to The Original Root Location Reached
-                                if(MaxRootReturn == 0)
-                                {
-                                    if (coordinate_X <= map.MaxCountX - 1)
-                                    {
-                                        if (currentNode.data > pathMap[coordinate_X, coordinate_Y].data)
-                                        {
-                                            //MaxRootReturn = 3;
-                                            currentNode = pathMap[coordinate_X, coordinate_Y];
-                                            pathNodeSearched.Add(pathMap[coordinate_X, coordinate_Y]);
-
-                                            //Remove AvoidList In Current Index Scanned
-                                            avoidNodeList = ClearAllAvoidNodeInCurrentXIndex(coordinate_X, avoidNodeList);
-
-                                            if (coordinate_X == map.MaxCountX - 1)
-                                            {
-                                                pathNodeInTotalSearched.Add(pathNodeSearched);
-                                                pathNodeSearched = new List<PathNode>();
-
-                                                avoidNodeList = AddAvoidList(pathNodeInTotalSearched, avoidNodeList);
-
-                                                if (MaxRootReturn != 0)
-                                                {
-                                                    currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
-                                                    pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
-                                                    continue;
-                                                }
-
-                                                break;
-                                            }
-                                            isStillFinding++;
-                                        }
-                                    }
-                                }
-
-                                continue;
-                            }
-
-                            avoidNodeList.Add(pathNodeSearched[pathNodeSearched.Count - 1]);
-                            pathNodeSearched.RemoveAt(pathNodeSearched.Count - 1);
-                            currentNode = pathNodeSearched[pathNodeSearched.Count - 1];
-                            continue;
-                        }
-                    }
-
-                    
-
-                    if (coordinate_X <= map.MaxCountX - 1)
-                    {
-                        //DEBUG TOMMOROW FOR INFINITY LOOP
-                        if (currentNode.data > pathMap[coordinate_X, coordinate_Y].data)
-                        {
-                            //MaxRootReturn = 3;
-                            currentNode = pathMap[coordinate_X, coordinate_Y];
-                            pathNodeSearched.Add(pathMap[coordinate_X, coordinate_Y]);
-
-                            //Remove AvoidList In Current Index Scanned
-                            avoidNodeList = ClearAllAvoidNodeInCurrentXIndex(coordinate_X, avoidNodeList);
-
-                            if (coordinate_X == map.MaxCountX - 1)
-                            {
-                                pathNodeInTotalSearched.Add(pathNodeSearched);
-                                pathNodeSearched = new List<PathNode>();
-
-                                avoidNodeList = AddAvoidList(pathNodeInTotalSearched,avoidNodeList);
-
-                                if (MaxRootReturn != 0)
-                                {
-                                    currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
-                                    pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
-                                    continue;
-                                }
-
+                                pathNodeInTotalSearched.Add(scanner.pathNodeSearched);
                                 break;
                             }
-                            isStillFinding++;
+
+                            continue;
                         }
+
+                        if (!hasScanned && scanner.currentNode == scanner.pathNodeSearched[0])
+                        {
+                            maxcounter++;
+                            if(maxcounter == DirectionScanner.CURRENTNODE_MAXCOUNT)
+                            break;
+                        }
+
                     }
 
-                    if (isStillFinding == 0)
-                    {
-                        pathNodeSearched = new List<PathNode>();
-                    }
-                    else
-                    {
-                        isStillFinding = 0;
-                    }
                 }
-                
+
             }
 
             return pathNodeInTotalSearched;
@@ -363,9 +236,6 @@ namespace CodingChallenge
             {
                 if(avoidNodeList[index].coordinate_X == index_X)
                     avoidNodeList.Remove(avoidNodeList[index]);
-
-                //if (indexRemoveList.Contains(avoidNodeList[index]))
-                //    avoidNodeList.Remove(avoidNodeList[index]);
             }
 
             return avoidNodeList;
