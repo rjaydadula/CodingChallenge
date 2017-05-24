@@ -192,7 +192,13 @@ namespace CodingChallenge
                             if (scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1].coordinate_X == map.MaxCountX - 1)
                             {
                                 pathNodeInTotalSearched.Add(scanner.pathNodeSearched);
-                                break;
+                                scanner.avoidNodeList = AddAvoidList(pathNodeInTotalSearched, scanner.avoidNodeList);
+                                
+
+                                scanner.pathNodeSearched = new List<PathNode>();
+                                scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
+                                scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
+                                //break;
                             }
 
                             continue;
@@ -219,11 +225,18 @@ namespace CodingChallenge
             
             foreach(List<PathNode> upperList in pathNodeSearchedList)
             {
-                foreach(PathNode node in upperList)
+                int index = 0;
+                foreach (PathNode node in upperList)
                 {
-                    if (!avoidNodeList.Contains(node))
-                        avoidNodeList.Add(node);
+                    if (index > 0)
+                    {
+                        if (!avoidNodeList.Contains(node))
+                            avoidNodeList.Add(node);
+                    }
+
+                    index++;
                 }
+                
             }
                 return avoidNodeList;
         }
