@@ -130,7 +130,7 @@ namespace CodingChallenge
                         }
                         else
                         {
-                            if (pathMap[mapIndex_X, mapIndex_Y].data == highestNodeValue.data && highestNodeValue.data > 0 || pathMap[mapIndex_X, mapIndex_Y].data >= map.MaxCountX && highestNodeValue.data > 0)
+                            if (pathMap[mapIndex_X, mapIndex_Y].data == highestNodeValue.data && highestNodeValue.data > 0 || pathMap[mapIndex_X, mapIndex_Y].data >= map.MaxCountX-mapIndex_X && highestNodeValue.data > 0)
                             {
                                 nodeListSameValue.Add(pathMap[mapIndex_X, mapIndex_Y]);
                             }
