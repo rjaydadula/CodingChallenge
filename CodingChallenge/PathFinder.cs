@@ -155,11 +155,15 @@ namespace CodingChallenge
         private List<List<PathNode>> findPath(PathNode[,] pathMap, ChallengeMap map, List<PathNode> targetNodes)
         {
             DirectionScanner scanner = new DirectionScanner();
-
+            List<PathNode> bottleneckNodes = new List<PathNode>();
             List<List<PathNode>> pathNodeInTotalSearched = new List<List<PathNode>>();
 
+            Console.WriteLine("TotalNumber of TargetNodes: " + targetNodes.Count);
+            int nodeCounter = 0;
             foreach (PathNode node in targetNodes)
             {
+                nodeCounter++;
+                Console.WriteLine("Scanned Node Number: " + nodeCounter);
                 scanner.pathNodeSearched = new List<PathNode>();
                 scanner.avoidNodeList = new List<PathNode>();
 
@@ -182,32 +186,57 @@ namespace CodingChallenge
                     if (hasScanned)
                         continue;
 
+                   
+
                     if (!hasScanned)
                     {
+
+                       List<PathNode> NodeRemoved = new List<PathNode>();
+                       NodeRemoved = ClearAllAvoidNodeWhenGoingDownwards(scanner.currentNode.coordinate_X + 1, scanner.currentNode.coordinate_Y, scanner.avoidNodeList);
+
                         hasScanned = scanner.ScanDownward(pathMap, map.MaxCountX);
+
 
                         if (hasScanned)
                         {
                             //CHECK IF END OF MAP IS REACHED
                             if (scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1].coordinate_X == map.MaxCountX - 1)
                             {
-                                pathNodeInTotalSearched.Add(scanner.pathNodeSearched);
-                                scanner.avoidNodeList = AddAvoidList(pathNodeInTotalSearched, scanner.avoidNodeList);
+                                if (isPathTotalSearchedExisted(pathNodeInTotalSearched,scanner.pathNodeSearched))
+                                    maxcounter++;
+                                else
+                                    pathNodeInTotalSearched.Add(scanner.pathNodeSearched);
+
+
+                                    if (maxcounter == DirectionScanner.CURRENTNODE_MAXCOUNT)
+                                        break;
+                                
+
+                                AddAvoidList(scanner.pathNodeSearched, scanner.avoidNodeList);
                                 
 
                                 scanner.pathNodeSearched = new List<PathNode>();
                                 scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
+
+                                ClearAllAvoidNodeInCurrentXIndex(scanner.currentNode.coordinate_X,map.MaxCountY, scanner.avoidNodeList);
+
                                 scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
                                 //break;
                             }
 
                             continue;
                         }
+                        else
+                        {
+                            //Fix BOTTLENECK
+                            AddAvoidList(NodeRemoved, scanner.avoidNodeList, true);
+                            bottleneckNodes.Add(scanner.currentNode);
+                        }
 
                         if (!hasScanned && scanner.currentNode == scanner.pathNodeSearched[0])
                         {
                             maxcounter++;
-                            if(maxcounter == DirectionScanner.CURRENTNODE_MAXCOUNT)
+                            if(maxcounter >= DirectionScanner.CURRENTNODE_MAXCOUNT)
                             break;
                         }
 
@@ -220,38 +249,90 @@ namespace CodingChallenge
             return pathNodeInTotalSearched;
         }
 
-        private List<PathNode> AddAvoidList(List<List<PathNode>> pathNodeSearchedList, List<PathNode> avoidNodeList)
+        private bool isPathTotalSearchedExisted(List<List<PathNode>> pathNodeInTotalSearched, List<PathNode> pathNodeList)
         {
-            
-            foreach(List<PathNode> upperList in pathNodeSearchedList)
+            foreach (var listPathNode in pathNodeInTotalSearched)
             {
-                int index = 0;
-                foreach (PathNode node in upperList)
+                if (listPathNode.Count == pathNodeList.Count)
                 {
-                    if (index > 0)
+                    int index = 0;
+                    bool ismatched = true;
+                    foreach (var PathNode in listPathNode)
+                    {
+                        if (PathNode != pathNodeList[index])
+                        {
+                            ismatched = false;
+                            break;
+                        }
+
+                        index++;
+                    }
+
+                    if (ismatched)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void AddAvoidList(List<PathNode> pathNodeSearchedList, List<PathNode> avoidNodeList,bool includeTopNode=false)
+        {
+           
+                int index = 0;
+                foreach (PathNode node in pathNodeSearchedList)
+                {
+                    if (includeTopNode)
                     {
                         if (!avoidNodeList.Contains(node))
                             avoidNodeList.Add(node);
+                    }
+                    else
+                    {
+                        if (index > 0)
+                        {
+                            if (!avoidNodeList.Contains(node))
+                                avoidNodeList.Add(node);
+                        }
                     }
 
                     index++;
                 }
                 
-            }
-                return avoidNodeList;
+                //return avoidNodeList;
         }
 
-        private List<PathNode> ClearAllAvoidNodeInCurrentXIndex(int index_X, List<PathNode> avoidNodeList)
+        private void ClearAllAvoidNodeInCurrentXIndex(int index_X,int mapYMaxCount, List<PathNode> avoidNodeList)
         {
             List<PathNode> indexRemoveList = new List<PathNode>();
 
             for(int index=0; index < avoidNodeList.Count;index++)
             {
-                if(avoidNodeList[index].coordinate_X == index_X)
+                if(avoidNodeList[index].coordinate_X == index_X && avoidNodeList[index].coordinate_Y > 0 && avoidNodeList[index].coordinate_Y  < mapYMaxCount - 1)
                     avoidNodeList.Remove(avoidNodeList[index]);
             }
 
-            return avoidNodeList;
+            //return avoidNodeList;
+        }
+
+        private List<PathNode> ClearAllAvoidNodeWhenGoingDownwards(int index_X,int index_Y, List<PathNode> avoidNodeList)
+        {
+            List<PathNode> indexRemoveList = new List<PathNode>();
+
+            for (int index = 0; index < avoidNodeList.Count; index++)
+            {
+                if (avoidNodeList[index].coordinate_X == index_X)
+                {
+                    //if (avoidNodeList[index].coordinate_Y != index_Y && (avoidNodeList[index].coordinate_Y == index_Y + 1 || avoidNodeList[index].coordinate_Y == index_Y - 1 ))
+                    //{
+                        indexRemoveList.Add(avoidNodeList[index]);
+                        avoidNodeList.Remove(avoidNodeList[index]);
+                    //}
+
+                }
+            }
+
+            return indexRemoveList;
         }
 
     }

@@ -94,5 +94,9 @@ namespace CodingChallenge
             return downwardisScanned;
         }
 
+        public void ScanPhase1()
+        {
+
+        }
     }
 }

@@ -13,18 +13,18 @@ namespace CodingChallenge
         public int MaxCountY { get; set; }
         public string[,] challengeMap;
 
-        public ChallengeMap(int MaxCountX, int MaxCountY)
-        {
-            this.MaxCountX = MaxCountX;
-            this.MaxCountY = MaxCountY;
-            challengeMap = new string[this.MaxCountX, this.MaxCountY];
-        }
+        //public ChallengeMap(int MaxCountX, int MaxCountY)
+        //{
+        //    this.MaxCountX = MaxCountX;
+        //    this.MaxCountY = MaxCountY;
+        //    challengeMap = new string[this.MaxCountX, this.MaxCountY];
+        //}
 
-        public void Create()
+        public void Create(string mapName)
         {
             string _filePath = Path.GetDirectoryName(System.AppDomain.CurrentDomain.BaseDirectory);
             _filePath = Directory.GetParent(Directory.GetParent(_filePath).FullName).FullName;
-            _filePath += @"\map.txt";
+            _filePath += @"\"+ mapName;
             if (File.Exists(_filePath))
             {
                 using (StreamReader streamReader = new StreamReader(_filePath))
@@ -51,6 +51,13 @@ namespace CodingChallenge
                                     mapIndex_Y++;
                                 }
 
+                            }
+                            else
+                            {
+                                string[] XYData = line.Split(' ');
+                                this.MaxCountX = int.Parse(XYData[0]);
+                                this.MaxCountY = int.Parse(XYData[1]);
+                                challengeMap = new string[this.MaxCountX, this.MaxCountY];
                             }
 
                             lineCounter++;
