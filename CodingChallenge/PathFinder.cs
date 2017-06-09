@@ -155,7 +155,6 @@ namespace CodingChallenge
         private List<List<PathNode>> findPath(PathNode[,] pathMap, ChallengeMap map, List<PathNode> targetNodes)
         {
             DirectionScanner scanner = new DirectionScanner();
-            List<PathNode> bottleneckNodes = new List<PathNode>();
             List<List<PathNode>> pathNodeInTotalSearched = new List<List<PathNode>>();
 
             Console.WriteLine("TotalNumber of TargetNodes: " + targetNodes.Count);
@@ -169,75 +168,223 @@ namespace CodingChallenge
 
                 scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
                 scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
-                bool hasScanned = false;
+                
                 int maxcounter = 0;
+                int notScannedCounter = 0;
+                List<PathNode> listOfClearedPathNode = new List<PathNode>();
+
+                if (nodeCounter == 3)
+                {
+                    string sad = string.Empty;
+                }
 
                 while (true)
                 {
-                    hasScanned = scanner.ScanLeft(pathMap);
+                   
+
+                    if (pathNodeInTotalSearched.Count == 2)
+                    {
+                        string sad = string.Empty;
+                    }
+
+                    bool hasScanned = false;
+
+                    int dataLeft = 0;
+                    int dataRight = 0;
+                    int dataDown = 0;
+                    if (scanner.currentNode.coordinate_Y > 0)
+                    {
+                         dataLeft = pathMap[scanner.currentNode.coordinate_X, scanner.currentNode.coordinate_Y - 1].data;
+                    }
+
+                    if (scanner.currentNode.coordinate_Y < map.MaxCountY - 1)
+                    {
+                         dataRight = pathMap[scanner.currentNode.coordinate_X, scanner.currentNode.coordinate_Y + 1].data;
+                    }
+                    if (scanner.currentNode.coordinate_X < map.MaxCountX - 1)
+                    {
+                         dataDown = pathMap[scanner.currentNode.coordinate_X + 1, scanner.currentNode.coordinate_Y].data;
+                    }
+
+                    if (!scanner.avoidNodeList.Contains(scanner.currentNode) && scanner.pathNodeSearched.Count > 1)
+                    {
+                        if (isNodeHasBottleNeck(pathMap, scanner.currentNode, map.MaxCountX))
+                        {
+                            AddAvoidList(new List<PathNode>() { scanner.currentNode }, scanner.avoidNodeList, true);
+                            scanner.pathNodeSearched.Remove(scanner.currentNode);
+                            scanner.currentNode = scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1];
+                            continue;
+                        }
+                    }
+
+                    if (scanner.currentNode.coordinate_Y > 0)
+                    {
+                        if (!isNodeHasBottleNeck(pathMap, pathMap[scanner.currentNode.coordinate_X, scanner.currentNode.coordinate_Y - 1], map.MaxCountX))
+                        {
+                            hasScanned = scanner.ScanLeft(pathMap);
+
+                            if (hasScanned)
+                            {
+                                if (scanner.currentNode.coordinate_Y > 0)
+                                {
+                                    //CHECK LEFT BOTTLENECK
+                                    if (isNodeHasBottleNeck(pathMap, pathMap[scanner.currentNode.coordinate_X, scanner.currentNode.coordinate_Y-1], map.MaxCountX))
+                                    {
+                                        //CHECK DOWN BOTTLENECK IF NOT END OF NODE
+                                        if (scanner.currentNode.coordinate_X < map.MaxCountX - 1)
+                                        {
+                                            if (isNodeHasBottleNeck(pathMap, pathMap[scanner.currentNode.coordinate_X + 1, scanner.currentNode.coordinate_Y], map.MaxCountX))
+                                            {
+                                                AddAvoidList(new List<PathNode>() { scanner.currentNode }, scanner.avoidNodeList, true);
+                                                scanner.pathNodeSearched.Remove(scanner.currentNode);
+                                                scanner.currentNode = scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1];
+                                                continue;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //CHECK DOWN BOTTLENECK IF NOT END OF NODE
+                                        if (scanner.currentNode.coordinate_X < map.MaxCountX - 1)
+                                        {
+                                            if (isNodeHasBottleNeck(pathMap, pathMap[scanner.currentNode.coordinate_X + 1, scanner.currentNode.coordinate_Y], map.MaxCountX))
+                                            {
+                                                AddAvoidList(new List<PathNode>() { scanner.currentNode }, scanner.avoidNodeList, true);
+                                                scanner.pathNodeSearched.Remove(scanner.currentNode);
+                                                scanner.currentNode = scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1];
+                                                continue;
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    //CHECK DOWN BOTTLENECK IF NOT END OF NODE
+                                    if (scanner.currentNode.coordinate_X < map.MaxCountX - 1)
+                                    {
+                                        if (isNodeHasBottleNeck(pathMap, pathMap[scanner.currentNode.coordinate_X + 1, scanner.currentNode.coordinate_Y], map.MaxCountX))
+                                        {
+                                            AddAvoidList(new List<PathNode>() { scanner.currentNode }, scanner.avoidNodeList, true);
+                                            scanner.pathNodeSearched.Remove(scanner.currentNode);
+                                            scanner.currentNode = scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1];
+                                            continue;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
 
                     //Left Scan
                     if (hasScanned)
+                    {
+                        notScannedCounter = 0;
                         continue;
+                    }
                     else
-                        hasScanned = scanner.ScanRight(pathMap, map.MaxCountY);
+                    {
+                        notScannedCounter++;
+                        if (scanner.currentNode.coordinate_Y < map.MaxCountY - 1)
+                        {
+                            if (!isNodeHasBottleNeck(pathMap, pathMap[scanner.currentNode.coordinate_X, scanner.currentNode.coordinate_Y + 1], map.MaxCountX))
+                                hasScanned = scanner.ScanRight(pathMap, map.MaxCountY);
+                        }
+                    }
 
                     //Right Scan
                     if (hasScanned)
+                    {
+                        notScannedCounter = 0;
                         continue;
-
+                    }
                    
 
                     if (!hasScanned)
                     {
+                        notScannedCounter++;
 
-                       List<PathNode> NodeRemoved = new List<PathNode>();
-                       NodeRemoved = ClearAllAvoidNodeWhenGoingDownwards(scanner.currentNode.coordinate_X + 1, scanner.currentNode.coordinate_Y, scanner.avoidNodeList);
-
-                        hasScanned = scanner.ScanDownward(pathMap, map.MaxCountX);
-
-
-                        if (hasScanned)
+                        if (listOfClearedPathNode.Count > 0)
                         {
-                            //CHECK IF END OF MAP IS REACHED
-                            if (scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1].coordinate_X == map.MaxCountX - 1)
+                            AddAvoidList(listOfClearedPathNode, scanner.avoidNodeList, true);
+                            listOfClearedPathNode = new List<PathNode>();
+                        }
+
+                        listOfClearedPathNode = ClearAllAvoidListNodeWhenGoingDownwards(scanner.currentNode.coordinate_X+1, scanner.currentNode.coordinate_Y, scanner.avoidNodeList);
+
+                        if (scanner.currentNode.coordinate_X < map.MaxCountX - 1)
+                        {
+                            if (!isNodeHasBottleNeck(pathMap, pathMap[scanner.currentNode.coordinate_X + 1, scanner.currentNode.coordinate_Y], map.MaxCountX))
                             {
-                                if (isPathTotalSearchedExisted(pathNodeInTotalSearched,scanner.pathNodeSearched))
-                                    maxcounter++;
+                                hasScanned = scanner.ScanDownward(pathMap, map.MaxCountX);
+
+
+                                if (hasScanned)
+                                {
+                                    //CHECK IF END OF MAP IS REACHED
+                                    if (scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1].coordinate_X == map.MaxCountX - 1)
+                                    {
+                                        if (isPathTotalSearchedExisted(pathNodeInTotalSearched, scanner.pathNodeSearched))
+                                            maxcounter++;
+                                        else
+                                            pathNodeInTotalSearched.Add(scanner.pathNodeSearched);
+
+
+                                        if (maxcounter >= DirectionScanner.CURRENTNODE_MAXCOUNT)
+                                            break;
+
+
+                                        AddAvoidList(scanner.pathNodeSearched, scanner.avoidNodeList);
+
+
+                                        
+                                        scanner.pathNodeSearched = new List<PathNode>();
+                                        scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
+
+                                        ClearAllAvoidNodeInCurrentXIndex(scanner.currentNode.coordinate_X, map.MaxCountY, scanner.avoidNodeList);
+
+                                        scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
+                                        //break;
+                                    }
+
+                                    notScannedCounter = 0;
+
+                                    continue;
+                                }
                                 else
-                                    pathNodeInTotalSearched.Add(scanner.pathNodeSearched);
-
-
-                                    if (maxcounter == DirectionScanner.CURRENTNODE_MAXCOUNT)
-                                        break;
-                                
-
-                                AddAvoidList(scanner.pathNodeSearched, scanner.avoidNodeList);
-                                
-
-                                scanner.pathNodeSearched = new List<PathNode>();
-                                scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
-
-                                ClearAllAvoidNodeInCurrentXIndex(scanner.currentNode.coordinate_X,map.MaxCountY, scanner.avoidNodeList);
-
-                                scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
-                                //break;
+                                {
+                                    notScannedCounter++;
+                                }
                             }
-
-                            continue;
+                            else
+                            {
+                                notScannedCounter++;
+                            }
                         }
-                        else
-                        {
-                            //Fix BOTTLENECK
-                            AddAvoidList(NodeRemoved, scanner.avoidNodeList, true);
-                            bottleneckNodes.Add(scanner.currentNode);
-                        }
+                        
 
                         if (!hasScanned && scanner.currentNode == scanner.pathNodeSearched[0])
                         {
                             maxcounter++;
                             if(maxcounter >= DirectionScanner.CURRENTNODE_MAXCOUNT)
                             break;
+                        }
+
+                        if (notScannedCounter >= 9)
+                        {
+                            if (scanner.currentNode == scanner.pathNodeSearched[0])
+                            {
+                                maxcounter++;
+                                if (maxcounter >= DirectionScanner.CURRENTNODE_MAXCOUNT)
+                                    break;
+
+                                continue;
+                            }
+
+                                AddAvoidList(new List<PathNode>() { scanner.currentNode }, scanner.avoidNodeList, true);
+                                scanner.pathNodeSearched.Remove(scanner.currentNode);
+                                scanner.currentNode = scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1];
+                                notScannedCounter = 0;
                         }
 
                     }
@@ -284,14 +431,16 @@ namespace CodingChallenge
                 {
                     if (includeTopNode)
                     {
-                        if (!avoidNodeList.Contains(node))
+                        if (!avoidNodeList.Contains(node) && index < pathNodeSearchedList.Count - 1)
+                        {
                             avoidNodeList.Add(node);
+                        }
                     }
                     else
                     {
                         if (index > 0)
                         {
-                            if (!avoidNodeList.Contains(node))
+                            if (!avoidNodeList.Contains(node) && index < pathNodeSearchedList.Count - 1)
                                 avoidNodeList.Add(node);
                         }
                     }
@@ -315,24 +464,35 @@ namespace CodingChallenge
             //return avoidNodeList;
         }
 
-        private List<PathNode> ClearAllAvoidNodeWhenGoingDownwards(int index_X,int index_Y, List<PathNode> avoidNodeList)
+        private List<PathNode> ClearAllAvoidListNodeWhenGoingDownwards(int index_X,int index_Y, List<PathNode> avoidNodeList)
         {
-            List<PathNode> indexRemoveList = new List<PathNode>();
+            List<PathNode> listPathNode = new List<PathNode>();
 
             for (int index = 0; index < avoidNodeList.Count; index++)
             {
                 if (avoidNodeList[index].coordinate_X == index_X)
                 {
-                    //if (avoidNodeList[index].coordinate_Y != index_Y && (avoidNodeList[index].coordinate_Y == index_Y + 1 || avoidNodeList[index].coordinate_Y == index_Y - 1 ))
-                    //{
-                        indexRemoveList.Add(avoidNodeList[index]);
+                    if (avoidNodeList[index].coordinate_Y != index_Y &&
+                        (avoidNodeList[index].coordinate_Y == index_Y - 1 ||
+                        avoidNodeList[index].coordinate_Y == index_Y + 1) )
+                    {
+                        listPathNode.Add(avoidNodeList[index]);
                         avoidNodeList.Remove(avoidNodeList[index]);
-                    //}
+                    }
 
                 }
             }
 
-            return indexRemoveList;
+            return listPathNode;
+        }
+
+
+        private bool isNodeHasBottleNeck(PathNode[,] pathMap,PathNode currentNode, int mapYMaxCount)
+        {
+            if (currentNode.data < mapYMaxCount - currentNode.coordinate_X)
+                return true;
+
+            return false;
         }
 
     }
