@@ -174,7 +174,7 @@ namespace CodingChallenge
             int nodeCounter = 0;
 
             //GET ALL BOTTLENECK NODES 
-            GetAllBottleNeckNodes(pathMap, map, scanner.bottleNeckNodeList);
+            GetAllBottleNeckNodes(pathMap, map, scanner.bottleNeckList);
 
 
             foreach (PathNode node in targetNodes)
