@@ -8,9 +8,9 @@ namespace CodingChallenge
 {
     public class DirectionScanner
     {
-       public List<PathNode> bottleNeckNodeList { get; set; } = new List<PathNode>();
        public List<PathNode> avoidNodeList { get; set; } = new List<PathNode>();
-       public List<PathNode> pathNodeSearched { get; set; } = new List<PathNode>();
+        public List<PathNode> bottleNeckList { get; set; } = new List<PathNode>();
+        public List<PathNode> pathNodeSearched { get; set; } = new List<PathNode>();
        public PathNode currentNode { get; set; } = new PathNode();
        public const int CURRENTNODE_MAXCOUNT = 3;
 
@@ -22,7 +22,7 @@ namespace CodingChallenge
 
             if (coordinate_Y >= 0)
             {
-                if (!avoidNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))// && !bottleNeckNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))
+                if (!avoidNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))
                 {
                     if (currentNode.data > pathMap[coordinate_X, coordinate_Y].data)
                     {
@@ -46,7 +46,7 @@ namespace CodingChallenge
 
             if (coordinate_Y <= mapMaxCountY - 1)
             {
-                if (!avoidNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))// && !bottleNeckNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))
+                if (!avoidNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))
                 {
                     if (currentNode.data > pathMap[coordinate_X, coordinate_Y].data)
                     {
@@ -68,7 +68,7 @@ namespace CodingChallenge
 
             if (coordinate_X <= mapMaxCountX - 1)
             {
-                if (!avoidNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))// && !bottleNeckNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))
+                if (!avoidNodeList.Contains(pathMap[coordinate_X, coordinate_Y]))
                 {
                     if (currentNode.data > pathMap[coordinate_X, coordinate_Y].data)
                     {
@@ -94,5 +94,6 @@ namespace CodingChallenge
 
             return downwardisScanned;
         }
+
     }
 }
