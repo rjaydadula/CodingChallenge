@@ -13,14 +13,15 @@ namespace CodingChallenge
         static void Main(string[] args)
         {
 
-            ChallengeMap map = new ChallengeMap(1000,1000);
-            map.Create();
+            ChallengeMap map = new ChallengeMap();
+            map.Create("map.txt");
 
             PathFinder pathFinder = new PathFinder();
             pathFinder.SearchPath(map);
 
             if (pathFinder.CalculatedPath != null && pathFinder.CalculatedPath.Trim() != string.Empty)
             {
+                Console.WriteLine("\n\n");
                 Console.WriteLine("Length Of Calculated Path: " + pathFinder.LengthOfCalculatedPath);
                 Console.WriteLine("Drop Of Calculated Path: " + pathFinder.DropOfCalculatedPath);
                 Console.WriteLine("Calculated Path: " + pathFinder.CalculatedPath);
