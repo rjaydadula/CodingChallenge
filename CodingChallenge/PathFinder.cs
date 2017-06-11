@@ -152,14 +152,31 @@ namespace CodingChallenge
             return nodeList;
         }
 
+        private void GetAllBottleNeckNodes(PathNode[,] pathMap, ChallengeMap map, List<PathNode> bottleNeckNodes)
+        {
+            for (int mapIndex_X = 0; mapIndex_X < map.MaxCountX; mapIndex_X++)
+            {
+                for (int mapIndex_Y = 0; mapIndex_Y < map.MaxCountY; mapIndex_Y++)
+                {
+                    if (pathMap[mapIndex_X, mapIndex_Y].data < map.MaxCountX - mapIndex_X)
+                        bottleNeckNodes.Add(pathMap[mapIndex_X, mapIndex_Y]);
+                }
+            }
+
+        }
+
         private List<List<PathNode>> findPath(PathNode[,] pathMap, ChallengeMap map, List<PathNode> targetNodes)
         {
             DirectionScanner scanner = new DirectionScanner();
-            List<PathNode> bottleneckNodes = new List<PathNode>();
             List<List<PathNode>> pathNodeInTotalSearched = new List<List<PathNode>>();
 
             Console.WriteLine("TotalNumber of TargetNodes: " + targetNodes.Count);
             int nodeCounter = 0;
+
+            //GET ALL BOTTLENECK NODES 
+            GetAllBottleNeckNodes(pathMap, map, scanner.bottleNeckNodeList);
+
+
             foreach (PathNode node in targetNodes)
             {
                 nodeCounter++;
@@ -174,6 +191,7 @@ namespace CodingChallenge
 
                 while (true)
                 {
+
                     hasScanned = scanner.ScanLeft(pathMap);
 
                     //Left Scan
@@ -190,10 +208,6 @@ namespace CodingChallenge
 
                     if (!hasScanned)
                     {
-
-                       List<PathNode> NodeRemoved = new List<PathNode>();
-                       NodeRemoved = ClearAllAvoidNodeWhenGoingDownwards(scanner.currentNode.coordinate_X + 1, scanner.currentNode.coordinate_Y, scanner.avoidNodeList);
-
                         hasScanned = scanner.ScanDownward(pathMap, map.MaxCountX);
 
 
@@ -202,35 +216,28 @@ namespace CodingChallenge
                             //CHECK IF END OF MAP IS REACHED
                             if (scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1].coordinate_X == map.MaxCountX - 1)
                             {
-                                if (isPathTotalSearchedExisted(pathNodeInTotalSearched,scanner.pathNodeSearched))
+                                if (isPathTotalSearchedExisted(pathNodeInTotalSearched, scanner.pathNodeSearched))
                                     maxcounter++;
                                 else
                                     pathNodeInTotalSearched.Add(scanner.pathNodeSearched);
 
 
-                                    if (maxcounter == DirectionScanner.CURRENTNODE_MAXCOUNT)
-                                        break;
-                                
+                                if (maxcounter >= DirectionScanner.CURRENTNODE_MAXCOUNT)
+                                    break;
+
 
                                 AddAvoidList(scanner.pathNodeSearched, scanner.avoidNodeList);
-                                
+
 
                                 scanner.pathNodeSearched = new List<PathNode>();
                                 scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
 
-                                ClearAllAvoidNodeInCurrentXIndex(scanner.currentNode.coordinate_X,map.MaxCountY, scanner.avoidNodeList);
+                                ClearAllAvoidNodeInCurrentXIndex(scanner.currentNode.coordinate_X, map.MaxCountY, scanner.avoidNodeList);
 
                                 scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
-                                //break;
                             }
 
                             continue;
-                        }
-                        else
-                        {
-                            //Fix BOTTLENECK
-                            AddAvoidList(NodeRemoved, scanner.avoidNodeList, true);
-                            bottleneckNodes.Add(scanner.currentNode);
                         }
 
                         if (!hasScanned && scanner.currentNode == scanner.pathNodeSearched[0])

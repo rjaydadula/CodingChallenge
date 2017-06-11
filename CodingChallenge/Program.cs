@@ -14,7 +14,7 @@ namespace CodingChallenge
         {
 
             ChallengeMap map = new ChallengeMap();
-            map.Create("mapdummy.txt");
+            map.Create("map.txt");
 
             PathFinder pathFinder = new PathFinder();
             pathFinder.SearchPath(map);

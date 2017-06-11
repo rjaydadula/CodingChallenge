@@ -47,6 +47,9 @@ namespace CodingChallenge
                                 int mapIndex_X = lineCounter - 1;
                                 foreach (string data in fileData)
                                 {
+                                    if (mapIndex_Y > this.MaxCountY-1)
+                                        break;
+
                                     challengeMap[mapIndex_X, mapIndex_Y] = data.Trim();
                                     mapIndex_Y++;
                                 }
