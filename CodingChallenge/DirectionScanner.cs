@@ -14,9 +14,11 @@ namespace CodingChallenge
     }
     public class DirectionScanner
     {
+
+       public List<List<PathNode>> pathNodeInTotalSearched { get; set; } = new List<List<PathNode>>();
        public List<PathNode> avoidNodeList { get; set; } = new List<PathNode>();
-        public HashSet<PathNode> bottleNeckList { get; set; } = new HashSet<PathNode>();
-        public List<PathNode> pathNodeSearched { get; set; } = new List<PathNode>();
+       public HashSet<PathNode> bottleNeckList { get; set; } = new HashSet<PathNode>();
+       public List<PathNode> pathNodeSearched { get; set; } = new List<PathNode>();
        public PathNode currentNode { get; set; } = new PathNode();
        public const int CURRENTNODE_MAXCOUNT = 3;
 
