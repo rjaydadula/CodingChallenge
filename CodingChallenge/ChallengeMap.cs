@@ -13,13 +13,6 @@ namespace CodingChallenge
         public int MaxCountY { get; set; }
         public string[,] challengeMap;
 
-        //public ChallengeMap(int MaxCountX, int MaxCountY)
-        //{
-        //    this.MaxCountX = MaxCountX;
-        //    this.MaxCountY = MaxCountY;
-        //    challengeMap = new string[this.MaxCountX, this.MaxCountY];
-        //}
-
         public void Create(string mapName)
         {
             string _filePath = Path.GetDirectoryName(System.AppDomain.CurrentDomain.BaseDirectory);

@@ -9,7 +9,6 @@ namespace CodingChallenge
 {
     public class PathNode
     {
-        public int box_Count { get; set; } = new int();
         public int data { get; set; } = new int();
         public int coordinate_X { get; set; }
         public int coordinate_Y { get; set; }
@@ -170,8 +169,6 @@ namespace CodingChallenge
         {
             DirectionScanner scanner = new DirectionScanner();
             List<List<PathNode>> pathNodeInTotalSearched = new List<List<PathNode>>();
-
-            //Console.WriteLine("TotalNumber of TargetNodes: " + targetNodes.Count);
             int nodeCounter = 0;
 
             //GET ALL BOTTLENECK NODES 
@@ -182,7 +179,7 @@ namespace CodingChallenge
             {
                 nodeCounter++;
                 string valuesCount = (((double)nodeCounter / targetNodes.Count()) * 100).ToString();
-                Console.WriteLine(" Map Scanned: " + (int)Convert.ToDouble(valuesCount, CultureInfo.InvariantCulture.NumberFormat) + "%" );
+                Console.WriteLine(" Scanning ChallengeMap: " + (int)Convert.ToDouble(valuesCount, CultureInfo.InvariantCulture.NumberFormat) + "%" );
                 Console.SetCursorPosition(0, 0);
                 scanner.pathNodeSearched = new List<PathNode>();
                 scanner.avoidNodeList = new List<PathNode>();
@@ -211,7 +208,11 @@ namespace CodingChallenge
                     //Left Scan
                     if (hasScanned)
                     {
-                        NodeCleared = ClearAllAvoidNodeWhenGoingDownwards(map, scanner.currentNode, scanner.avoidNodeList, Direction.Left);
+                        NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Left);
+
+                        if(NodeCleared.Count == 0)
+                            NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Down);
+
                         continue;
                     }
                     else
@@ -220,7 +221,11 @@ namespace CodingChallenge
                     //Right Scan
                     if (hasScanned)
                     {
-                        NodeCleared = ClearAllAvoidNodeWhenGoingDownwards(map, scanner.currentNode, scanner.avoidNodeList, Direction.Right);
+                        NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Right);
+
+                        if (NodeCleared.Count == 0)
+                            NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Down);
+
                         continue;
                     }
 
@@ -239,7 +244,7 @@ namespace CodingChallenge
                         }
 
                         if(hasScanned)
-                        NodeCleared = ClearAllAvoidNodeWhenGoingDownwards(map,scanner.currentNode, scanner.avoidNodeList,Direction.Down);
+                        NodeCleared = ClearAvoidNodeListBaseOnDirection(map,scanner.currentNode, scanner.avoidNodeList,Direction.Down);
 
 
                         if (hasScanned)
@@ -377,18 +382,24 @@ namespace CodingChallenge
                 if(avoidNodeList[index].coordinate_X == index_X && avoidNodeList[index].coordinate_Y > 0 && avoidNodeList[index].coordinate_Y  < mapYMaxCount - 1)
                     avoidNodeList.Remove(avoidNodeList[index]);
             }
-
-            //return avoidNodeList;
         }
 
-        private List<PathNode> ClearAllAvoidNodeWhenGoingDownwards(ChallengeMap map,PathNode currentNode, List<PathNode> avoidNodeList,int direction)
+        private List<PathNode> ClearAvoidNodeListBaseOnDirection(ChallengeMap map,PathNode currentNode, List<PathNode> avoidNodeList,int direction)
         {
             List<PathNode> indexRemoveList = new List<PathNode>();
 
+            int coordinate_X = currentNode.coordinate_X;
+
+            if(direction == Direction.Down)
+            {
+                coordinate_X = currentNode.coordinate_X + 1;
+            }
+
             for (int index = 0; index < avoidNodeList.Count; index++)
             {
-                if (avoidNodeList[index].coordinate_X == currentNode.coordinate_X)
+                if (avoidNodeList[index].coordinate_X == coordinate_X)
                 {
+                    //CHECK CURRENT SCAN DIRECTION
                     switch (direction)
                     {
                         case Direction.Left:
@@ -420,12 +431,23 @@ namespace CodingChallenge
                             }
                         case Direction.Down:
                             {
-
-                                if (avoidNodeList[index].coordinate_Y != currentNode.coordinate_Y && (avoidNodeList[index].coordinate_Y == currentNode.coordinate_Y + 1 || avoidNodeList[index].coordinate_Y == currentNode.coordinate_Y - 1))
+                                if (avoidNodeList[index].coordinate_Y != currentNode.coordinate_Y && currentNode.coordinate_Y > 0)
                                 {
-                                    indexRemoveList.Add(avoidNodeList[index]);
-                                    avoidNodeList.Remove(avoidNodeList[index]);
+                                    if (avoidNodeList[index].coordinate_Y == currentNode.coordinate_Y - 1)
+                                    {
+                                        indexRemoveList.Add(avoidNodeList[index]);
+                                        avoidNodeList.Remove(avoidNodeList[index]);
+                                    }
                                 }
+                                else if(avoidNodeList[index].coordinate_Y != currentNode.coordinate_Y && currentNode.coordinate_Y < map.MaxCountY-1)
+                                {
+                                    if (avoidNodeList[index].coordinate_Y == currentNode.coordinate_Y + 1)
+                                    {
+                                        indexRemoveList.Add(avoidNodeList[index]);
+                                        avoidNodeList.Remove(avoidNodeList[index]);
+                                    }
+                                }
+
 
                                 break;
                             }
