@@ -168,130 +168,166 @@ namespace CodingChallenge
         private List<List<PathNode>> findPath(PathNode[,] pathMap, ChallengeMap map, List<PathNode> targetNodes)
         {
             DirectionScanner scanner = new DirectionScanner();
-            List<List<PathNode>> pathNodeInTotalSearched = new List<List<PathNode>>();
+
             int nodeCounter = 0;
 
             //GET ALL BOTTLENECK NODES 
             GetAllBottleNeckNodes(pathMap, map, scanner.bottleNeckList);
 
+
             List<PathNode> NodeCleared = new List<PathNode>();
-            foreach (PathNode node in targetNodes)
+
+            //Scan Twice to properly scan the whole Map
+            for (int scanning = 0; scanning < 2; scanning++)
             {
-                nodeCounter++;
-                string valuesCount = (((double)nodeCounter / targetNodes.Count()) * 100).ToString();
-                Console.WriteLine(" Scanning ChallengeMap: " + (int)Convert.ToDouble(valuesCount, CultureInfo.InvariantCulture.NumberFormat) + "%" );
-                Console.SetCursorPosition(0, 0);
-                scanner.pathNodeSearched = new List<PathNode>();
-                scanner.avoidNodeList = new List<PathNode>();
-
-                scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
-                scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
-                bool hasScanned = false;
-                int maxcounter = 0;
-
-                while (true)
+                foreach (PathNode node in targetNodes)
                 {
-                    if(pathNodeInTotalSearched.Count == 1)
+                    nodeCounter++;
+                    string valuesCount = (((double)nodeCounter / (targetNodes.Count()*2)) * 100).ToString();
+                    Console.WriteLine(" Scanning ChallengeMap: " + (int)Convert.ToDouble(valuesCount, CultureInfo.InvariantCulture.NumberFormat) + "%");
+                    Console.SetCursorPosition(0, 0);
+
+                    scanner.pathNodeSearched = new List<PathNode>();
+                    scanner.avoidNodeList = new List<PathNode>();
+
+                    scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
+                    scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
+
+                    bool hasScanned = false;
+                    int maxcounter = 0;
+
+                    while (true)
                     {
-
-                    }
-
-                    if (scanner.bottleNeckList.Contains(scanner.currentNode))
-                    {
-                        //AddAvoidList(new HashSet<PathNode>() { scanner.currentNode }, scanner.avoidNodeList, true);
-                        scanner.pathNodeSearched.Remove(scanner.currentNode);
-                        scanner.currentNode = scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1];
-                    }
-
-                    hasScanned = scanner.ScanLeft(pathMap);
-
-                    //Left Scan
-                    if (hasScanned)
-                    {
-                        NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Left);
-
-                        if(NodeCleared.Count == 0)
-                            NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Down);
-
-                        continue;
-                    }
-                    else
-                        hasScanned = scanner.ScanRight(pathMap, map.MaxCountY);
-
-                    //Right Scan
-                    if (hasScanned)
-                    {
-                        NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Right);
-
-                        if (NodeCleared.Count == 0)
-                            NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Down);
-
-                        continue;
-                    }
-
-                   
-
-                    if (!hasScanned)
-                    {
-                        hasScanned = scanner.ScanDownward(pathMap, map.MaxCountX);
-
-                        
-                        if (NodeCleared.Count() > 0)
+                        if (scanner.bottleNeckList.Contains(scanner.currentNode))
                         {
-                            //Add All Cleared Nodes in PreviousStage
-                            AddAvoidList(map,new HashSet<PathNode>() { scanner.currentNode }, scanner.avoidNodeList, true);
-                            NodeCleared = new List<PathNode>();
+                            scanner.pathNodeSearched.Remove(scanner.currentNode);
+                            scanner.currentNode = scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1];
                         }
 
-                        if(hasScanned)
-                        NodeCleared = ClearAvoidNodeListBaseOnDirection(map,scanner.currentNode, scanner.avoidNodeList,Direction.Down);
 
+                    //Scanning Left Direction - FirstScan
+                    if (scanning == 0)
+                    {
+                          hasScanned = scanner.ScanLeft(pathMap);
 
-                        if (hasScanned)
-                        {
-                            //CHECK IF END OF MAP IS REACHED
-                            if (scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1].coordinate_X == map.MaxCountX - 1)
+                            //Left Scan
+                            if (hasScanned)
                             {
-                                if (isPathSearchedAlreadyAdded(pathNodeInTotalSearched, scanner.pathNodeSearched))
-                                    maxcounter++;
-                                else
-                                    pathNodeInTotalSearched.Add(scanner.pathNodeSearched);
+                                NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Left);
+
+                                if (NodeCleared.Count == 0)
+                                    NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Down);
+
+                                continue;
+                            }
+                            else 
+                                hasScanned = scanner.ScanRight(pathMap, map.MaxCountY);
+
+                            //Right Scan
+                            if (hasScanned)
+                            {
+                                NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Right);
+
+                                if (NodeCleared.Count == 0)
+                                    NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Down);
+
+                                continue;
+                            }
+                    }
+                    else //Scanning Right Direction - SecondScan
+                    {
+                        hasScanned = scanner.ScanRight(pathMap,map.MaxCountY);
+
+                            //Right Scan
+                            if (hasScanned)
+                            {
+                                NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Right);
+
+                                if (NodeCleared.Count == 0)
+                                    NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Down);
+
+                                continue;
+                            }
+                            else
+                                hasScanned = scanner.ScanLeft(pathMap);
+
+                            //Left Scan
+                            if (hasScanned)
+                            {
+                                NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Left);
+
+                                if (NodeCleared.Count == 0)
+                                    NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Down);
+
+                                continue;
+                            }
+                    }
 
 
-                                if (maxcounter >= DirectionScanner.CURRENTNODE_MAXCOUNT)
-                                    break;
+
+                        if (!hasScanned)
+                        {
+                            hasScanned = scanner.ScanDownward(pathMap, map.MaxCountX);
 
 
-                                AddAvoidList(map,scanner.pathNodeSearched, scanner.avoidNodeList);
-
-
-                                scanner.pathNodeSearched = new List<PathNode>();
-                                scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
-
-                                ClearAllAvoidNodeInCurrentXIndex(scanner.currentNode.coordinate_X, map.MaxCountY, scanner.avoidNodeList);
-
-                                scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
+                            if (NodeCleared.Count() > 0)
+                            {
+                                //Add All Cleared Nodes in PreviousStage
+                                AddAvoidList(map, new HashSet<PathNode>() { scanner.currentNode }, scanner.avoidNodeList, true);
+                                NodeCleared = new List<PathNode>();
                             }
 
-                            
+                            if (hasScanned)
+                                NodeCleared = ClearAvoidNodeListBaseOnDirection(map, scanner.currentNode, scanner.avoidNodeList, Direction.Down);
 
-                            continue;
-                        }
 
-                        if (!hasScanned && scanner.currentNode == scanner.pathNodeSearched[0])
-                        {
-                            maxcounter++;
-                            if(maxcounter >= DirectionScanner.CURRENTNODE_MAXCOUNT)
-                            break;
+                            if (hasScanned)
+                            {
+                                //CHECK IF END OF MAP IS REACHED
+                                if (scanner.pathNodeSearched[scanner.pathNodeSearched.Count - 1].coordinate_X == map.MaxCountX - 1)
+                                {
+                                    if (isPathSearchedAlreadyAdded(scanner.pathNodeInTotalSearched, scanner.pathNodeSearched))
+                                        break;
+                                    else
+                                        scanner.pathNodeInTotalSearched.Add(scanner.pathNodeSearched);
+
+
+                                    AddAvoidList(map, scanner.pathNodeSearched, scanner.avoidNodeList);
+
+
+                                    scanner.pathNodeSearched = new List<PathNode>();
+                                    scanner.currentNode = pathMap[node.coordinate_X, node.coordinate_Y];
+
+                                    ClearAllAvoidNodeInCurrentXIndex(scanner.currentNode.coordinate_X, map.MaxCountY, scanner.avoidNodeList);
+
+                                    scanner.pathNodeSearched.Add(pathMap[node.coordinate_X, node.coordinate_Y]);
+                                }
+
+
+
+                                continue;
+                            }
+
+                            if (!hasScanned && scanner.currentNode == scanner.pathNodeSearched[0])
+                            {
+                                maxcounter++;
+                                if (maxcounter >= DirectionScanner.CURRENTNODE_MAXCOUNT)
+                                    break;
+                            }
+
                         }
 
                     }
 
                 }
-
             }
 
-            return pathNodeInTotalSearched;
+            return scanner.pathNodeInTotalSearched;
+        }
+
+        private void Scanning()
+        {
+
         }
 
         private bool isPathSearchedAlreadyAdded(List<List<PathNode>> pathNodeInTotalSearched, List<PathNode> pathNodeList)

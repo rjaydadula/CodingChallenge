@@ -20,45 +20,52 @@ namespace CodingChallenge
             _filePath += @"\"+ mapName;
             if (File.Exists(_filePath))
             {
-                using (StreamReader streamReader = new StreamReader(_filePath))
+                try
                 {
-                    string reader = streamReader.ReadToEnd();
-
-                    using (StringReader strReader = new StringReader(reader))
+                    using (StreamReader streamReader = new StreamReader(_filePath))
                     {
-                        string line = string.Empty;
-                        int lineCounter = 0;
-                        while ((line = strReader.ReadLine()) != null)
+                        string reader = streamReader.ReadToEnd();
+
+                        using (StringReader strReader = new StringReader(reader))
                         {
-                            if (lineCounter > 0)
+                            string line = string.Empty;
+                            int lineCounter = 0;
+                            while ((line = strReader.ReadLine()) != null)
                             {
-                                //Populating the ChallengeMap with data
-
-                                string[] fileData = line.Split(' ');
-
-                                int mapIndex_Y = 0;
-                                int mapIndex_X = lineCounter - 1;
-                                foreach (string data in fileData)
+                                if (lineCounter > 0)
                                 {
-                                    if (mapIndex_Y > this.MaxCountY-1)
-                                        break;
+                                    //Populating the ChallengeMap with data
 
-                                    challengeMap[mapIndex_X, mapIndex_Y] = data.Trim();
-                                    mapIndex_Y++;
+                                    string[] fileData = line.Split(' ');
+
+                                    int mapIndex_Y = 0;
+                                    int mapIndex_X = lineCounter - 1;
+                                    foreach (string data in fileData)
+                                    {
+                                        if (mapIndex_Y > this.MaxCountY - 1)
+                                            break;
+
+                                        challengeMap[mapIndex_X, mapIndex_Y] = data.Trim();
+                                        mapIndex_Y++;
+                                    }
+
+                                }
+                                else
+                                {
+                                    string[] XYData = line.Split(' ');
+                                    this.MaxCountX = int.Parse(XYData[0]);
+                                    this.MaxCountY = int.Parse(XYData[1]);
+                                    challengeMap = new string[this.MaxCountX, this.MaxCountY];
                                 }
 
+                                lineCounter++;
                             }
-                            else
-                            {
-                                string[] XYData = line.Split(' ');
-                                this.MaxCountX = int.Parse(XYData[0]);
-                                this.MaxCountY = int.Parse(XYData[1]);
-                                challengeMap = new string[this.MaxCountX, this.MaxCountY];
-                            }
-
-                            lineCounter++;
                         }
                     }
+                }
+                catch
+                {
+                    throw new Exception("Invalid Map!");
                 }
             }
             else
